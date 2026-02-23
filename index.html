@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Biologie BAC</title>
+<style>
+  body { font-family: Arial; max-width: 700px; margin: auto; padding: 20px; }
+  .hidden { display: none; }
+  .question { margin-bottom: 20px; }
+  button { margin: 5px; padding: 10px 15px; font-size: 16px; }
+  #progressBar { height: 20px; background: lightgreen; width: 0%; transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+  <h2>Quiz Biologie - Materie BAC</h2>
+  <p>Testul conține 10 întrebări și durează 15 minute.</p>
+  <button onclick="startQuiz()">Start Test</button>
+</div>
+
+<div id="quizContainer" class="hidden">
+  <p id="timer">⏱ Timp: 15:00</p>
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div id="quiz"></div>
+  <button onclick="prevQuestion()">⬅ Înapoi</button>
+  <button onclick="nextQuestion()">➡ Înainte</button>
+  <button onclick="finishQuiz()">✅ Verifică toate răspunsurile</button>
+  <button onclick="resetQuiz()">🔄 Reset</button>
+  <div id="result"></div>
+</div>
+
+<script>
+// ===================================
+// DATELE QUIZ-ULUI
+// ===================================
+const quizData = [
+  {q:"Unde are loc schimbul de gaze?", opts:["În trahee","În bronhii","În alveole pulmonare","În laringe"], ans:2},
+  {q:"Care este rolul diafragmei în respirație?", opts:["Filtrează aerul","Produce oxigen","Ajută la inspirație și expirație","Transportă oxigenul"], ans:2},
+  {q:"Ce gaz este eliminat în timpul expirației?", opts:["Oxigen","Azot","Dioxid de carbon","Hidrogen"], ans:2},
+  {q:"Care este organul principal al sistemului nervos?", opts:["Inima","Creierul","Plămânii","Ficatul"], ans:1},
+  {q:"Unitatea structurală a sistemului nervos este:", opts:["Hematia","Neuronul","Alveola","Hormonul"], ans:1},
+  {q:"Măduva spinării are rol în:", opts:["Digestie","Respirație","Reflexe","Producerea hormonilor"], ans:2},
+  {q:"Ce glandă produce insulina?", opts:["Tiroida","Hipofiza","Pancreasul","Suprarenalele"], ans:2},
+  {q:"Hormonii sunt secretați direct în:", opts:["Sistemul digestiv","Sânge","Plămâni","Piele"], ans:1},
+  {q:"Glanda „șefă” a sistemului endocrin este:", opts:["Tiroida","Hipofiza","Pancreasul","Timusul"], ans:1},
+  {q:"Ce parte a sistemului nervos controlează voluntar mușchii?", opts:["Sistemul nervos somatic","Sistemul nervos autonom","Măduva spinării","Cortexul vizual"], ans:0}
+];
+
+let currentQ = 0;
+let userAnswers = new Array(quizData.length).fill(null);
+let timerInterval;
+let time = 15*60; // 15 minute
+
+// ===================================
+// FUNCȚII
+// ===================================
+function startQuiz(){
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("quizContainer").classList.remove("hidden");
+  showQuestion();
+  startTimer();
+}
+
+function showQuestion(){
+  const q = quizData[currentQ];
+  let html = `<div class="question"><h3>Întrebarea ${currentQ+1}: ${q.q}</h3>`;
+  q.opts.forEach((opt,i) => {
+    let checked = (userAnswers[currentQ]===i)? "checked" : "";
+    html += `<div><input type="radio" name="q${currentQ}" value="${i}" ${checked}> ${opt}</div>`;
+  });
+  html += `</div>`;
+  document.getElementById("quiz").innerHTML = html;
+
+  // Update progres bar
+  document.getElementById("progressBar").style.width = ((currentQ+1)/quizData.length*100) + "%";
+}
+
+function nextQuestion(){
+  const selected = document.querySelector(`input[name="q${currentQ}"]:checked`);
+  if(selected) userAnswers[currentQ] = parseInt(selected.value);
+  if(currentQ<quizData.length-1){
+    currentQ++;
+    showQuestion();
+  }
+}
+
+function prevQuestion(){
+  const selected = document.querySelector(`input[name="q${currentQ}"]:checked`);
+  if(selected) userAnswers[currentQ] = parseInt(selected.value);
+  if(currentQ>0){
+    currentQ--;
+    showQuestion();
+  }
+}
+
+function finishQuiz(){
+  const selected = document.querySelector(`input[name="q${currentQ}"]:checked`);
+  if(selected) userAnswers[currentQ] = parseInt(selected.value);
+
+  let score = 0;
+  quizData.forEach((q,i)=>{
+    if(userAnswers[i] === q.ans) score++;
+  });
+  document.getElementById("result").innerHTML = `<h3>Scor: ${score} / ${quizData.length}</h3>`;
+  clearInterval(timerInterval);
+}
+
+function resetQuiz(){
+  currentQ = 0;
+  userAnswers = new Array(quizData.length).fill(null);
+  document.getElementById("result").innerHTML = "";
+  showQuestion();
+  clearInterval(timerInterval);
+  time = 15*60;
+  startTimer();
+}
+
+// ===================================
+// TIMER
+// ===================================
+function startTimer(){
+  function updateTimer(){
+    let min = Math.floor(time/60);
+    let sec = time%60;
+    if(sec<10) sec="0"+sec;
+    document.getElementById("timer").innerText = `⏱ Timp: ${min}:${sec}`;
+    if(time<=0){
+      finishQuiz();
+      alert("Timpul s-a terminat!");
+      clearInterval(timerInterval);
+    }
+    time--;
+  }
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+</script>
+</body>
+</html>
